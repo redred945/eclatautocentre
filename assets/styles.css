@@ -76,7 +76,41 @@ p { margin: 0; }
   background: radial-gradient(circle at 50% 40%, rgba(243, 146, 0, .12), rgba(243, 146, 0, 0) 62%);
 }
 .hero-text { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; }
-.hero h1 { font-size: clamp(3rem, 1.5rem + 5.6vw, 6rem); letter-spacing: -.035em; text-wrap: balance; }
+.hero h1 { position: relative; font-size: clamp(3rem, 1.5rem + 5.6vw, 6rem); letter-spacing: -.035em; text-wrap: balance; }
+
+/* éclat : glint that sweeps across the title once, then rests white */
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .hero h1.shine {
+    background-image: linear-gradient(100deg, var(--ink) 42%, #ffe4b8 50%, #fff 52%, var(--ink) 60%);
+    background-size: 300% 100%;
+    background-position: 130% 0;
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+    animation: shine 1.9s var(--ease) .45s 1 both;
+  }
+}
+@keyframes shine { to { background-position: -40% 0; } }
+
+/* éclat : faint twinkling sparkles around the headline */
+.sparkles { position: absolute; z-index: 1; left: 50%; top: 0; transform: translateX(-50%);
+  width: min(760px, 92vw); height: clamp(220px, 34vw, 340px); pointer-events: none; }
+.sparkles i {
+  position: absolute; left: var(--x); top: var(--y);
+  width: var(--s); height: var(--s); opacity: 0;
+  background:
+    radial-gradient(circle, rgba(255,255,255,.95) 0 12%, transparent 46%),
+    conic-gradient(from 0deg, transparent 0 8%, rgba(255,220,170,.9) 12%, transparent 16% 33%, rgba(255,220,170,.9) 37%, transparent 41% 58%, rgba(255,220,170,.9) 62%, transparent 66% 83%, rgba(255,220,170,.9) 87%, transparent 91%);
+  filter: drop-shadow(0 0 5px rgba(243, 146, 0, .7));
+  animation: twinkle var(--d, 4.5s) ease-in-out var(--delay, 0s) infinite;
+}
+@keyframes twinkle {
+  0%, 100% { opacity: 0; transform: scale(.3) rotate(0deg); }
+  45%, 55% { opacity: .85; transform: scale(1) rotate(25deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero h1.shine { animation: none; }
+  .sparkles { display: none; }
+}
 .hero-sub { margin: 1.15rem auto 0; max-width: 40ch; font-size: clamp(1.1rem, 1rem + .55vw, 1.45rem); font-weight: 500; color: var(--ink-2); letter-spacing: -.02em; line-height: 1.36; }
 .hero-links { margin-top: 1.35rem; display: flex; gap: 1.6rem; justify-content: center; flex-wrap: wrap; font-size: 1.02rem; }
 .hero-shot {
@@ -121,6 +155,7 @@ p { margin: 0; }
 .gitem span { position: absolute; left: 0; right: 0; bottom: 0; padding: 2.4rem 1.1rem 1rem; color: #fff; font-weight: 600; font-size: .95rem; display: flex; flex-direction: column; gap: .1rem; background: linear-gradient(180deg, transparent, rgba(0, 0, 0, .82)); }
 .gitem em { font-style: normal; font-weight: 400; font-size: .8rem; opacity: .82; }
 .ghint { margin: 1.6rem auto 0; text-align: center; font-size: .8rem; color: var(--ink-3); letter-spacing: .04em; }
+.ghint .gm { display: none; }
 
 /* ---- Sinistre ---- */
 .sinistre { background: var(--bg-alt); border-block: 1px solid var(--hair); }
@@ -196,10 +231,18 @@ html.anim .reveal.in { opacity: 1; transform: none; transition: opacity .8s var(
   .nav > a { padding: .95rem 0; border-bottom: 1px solid var(--hair); font-size: 1rem; }
   .nav-cta { margin-top: 1rem; text-align: center; border-bottom: 0; }
   .burger { display: block; }
+
+  /* réalisations : swipe carousel on mobile (native touch scroll, no JS) */
+  .gwrap { overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; margin-inline: calc(22px - 4vw); padding-inline: 4vw; }
+  .gwrap::-webkit-scrollbar { display: none; }
+  .gtrack { display: flex; grid-template-columns: none; gap: 12px; }
+  .gitem { flex: 0 0 84%; aspect-ratio: 4 / 5; scroll-snap-align: center; }
+  .ghint .gd { display: none; }
+  .ghint .gm { display: inline; }
 }
 @media (max-width: 560px) {
   .craft-list { grid-template-columns: 1fr; }
-  .gtrack { grid-template-columns: 1fr; }
   .fld2 { grid-template-columns: 1fr; }
   .hero-links { flex-direction: column; gap: .8rem; }
 }
