@@ -47,35 +47,6 @@
   }
 
   /* réalisations : make the horizontal strip feel natural with a mouse */
-  var gs = document.getElementById("gscroll");
-  if (gs) {
-    gs.addEventListener("wheel", function (e) {
-      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
-      var max = gs.scrollWidth - gs.clientWidth;
-      if (max <= 0) return;
-      var atStart = gs.scrollLeft <= 0, atEnd = gs.scrollLeft >= max - 1;
-      if ((e.deltaY < 0 && atStart) || (e.deltaY > 0 && atEnd)) return; // let page scroll at edges
-      e.preventDefault();
-      gs.scrollLeft += e.deltaY;
-    }, { passive: false });
-
-    var down = false, sx = 0, sl = 0, moved = false;
-    gs.addEventListener("pointerdown", function (e) {
-      if (e.pointerType === "mouse" && e.button !== 0) return;
-      down = true; moved = false; sx = e.clientX; sl = gs.scrollLeft; gs.setPointerCapture(e.pointerId);
-    });
-    gs.addEventListener("pointermove", function (e) {
-      if (!down) return;
-      var dx = e.clientX - sx;
-      if (Math.abs(dx) > 4) moved = true;
-      gs.scrollLeft = sl - dx;
-    });
-    var up = function () { down = false; };
-    gs.addEventListener("pointerup", up);
-    gs.addEventListener("pointercancel", up);
-    gs._dragMoved = function () { return moved; };
-  }
-
   /* lightbox */
   var items = Array.prototype.slice.call(document.querySelectorAll("#gtrack .gitem"));
   var lb = document.getElementById("lb");
@@ -93,7 +64,7 @@
   var close = function () { lb.classList.remove("open"); lb.setAttribute("aria-hidden", "true"); document.body.style.overflow = ""; };
   items.forEach(function (it, i) {
     it.setAttribute("tabindex", "0");
-    it.addEventListener("click", function () { if (gs && gs._dragMoved && gs._dragMoved()) return; open(i); });
+    it.addEventListener("click", function () { open(i); });
     it.addEventListener("keydown", function (e) { if (e.key === "Enter") open(i); });
   });
   document.getElementById("lbClose").addEventListener("click", close);
