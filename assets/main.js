@@ -2,51 +2,71 @@
   "use strict";
   var docEl = document.documentElement;
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var hasGSAP = typeof window.gsap !== "undefined" && typeof window.ScrollTrigger !== "undefined";
   var anim = !reduce;
-  if (anim) docEl.classList.add("anim");
 
-  /* year */
-  var y = document.getElementById("year");
-  if (y) y.textContent = new Date().getFullYear();
-
-  /* header + mobile nav */
-  var hd = document.getElementById("hd");
-  var burger = document.getElementById("burger");
-  var nav = document.getElementById("nav");
-  var closeNav = function () { nav.classList.remove("open"); burger.setAttribute("aria-expanded", "false"); };
-  burger.addEventListener("click", function () { burger.setAttribute("aria-expanded", String(nav.classList.toggle("open"))); });
-  nav.addEventListener("click", function (e) { if (e.target.tagName === "A") closeNav(); });
-  window.addEventListener("keydown", function (e) { if (e.key === "Escape") closeNav(); });
-  var onScroll = function () { hd.classList.toggle("stuck", window.scrollY > 8); };
-  onScroll();
-  window.addEventListener("scroll", onScroll, { passive: true });
-
-  /* reveals — progressive enhancement + safety net */
+  /* ---------- reveals: set up the safety nets FIRST, before anything can throw ---------- */
   var reveals = Array.prototype.slice.call(document.querySelectorAll(".reveal"));
-  var revealAll = function () { reveals.forEach(function (el) { el.classList.add("in"); }); };
+  var revealAll = function () { for (var i = 0; i < reveals.length; i++) reveals[i].classList.add("in"); };
+  var unlock = function () { docEl.classList.remove("anim"); revealAll(); };
+
   if (anim && reveals.length) {
-    if ("IntersectionObserver" in window) {
+    docEl.classList.add("anim");
+    setTimeout(revealAll, 1600);                 // time-based net
+    window.addEventListener("scroll", function once() {  // interaction net
+      revealAll();
+      window.removeEventListener("scroll", once);
+    }, { passive: true, once: true });
+  } else {
+    revealAll();
+  }
+  /* if any later code throws, un-hide everything */
+  window.addEventListener("error", unlock);
+  setTimeout(function () { window.removeEventListener("error", unlock); }, 8000);
+
+  try {
+    var hasGSAP = typeof window.gsap !== "undefined" && typeof window.ScrollTrigger !== "undefined";
+
+    /* year */
+    var y = document.getElementById("year");
+    if (y) y.textContent = new Date().getFullYear();
+
+    /* header + mobile nav */
+    var hd = document.getElementById("hd");
+    var burger = document.getElementById("burger");
+    var nav = document.getElementById("nav");
+    var closeNav = function () { if (nav) nav.classList.remove("open"); if (burger) burger.setAttribute("aria-expanded", "false"); };
+    if (burger && nav) {
+      burger.addEventListener("click", function () { burger.setAttribute("aria-expanded", String(nav.classList.toggle("open"))); });
+      nav.addEventListener("click", function (e) { if (e.target.tagName === "A") closeNav(); });
+    }
+    window.addEventListener("keydown", function (e) { if (e.key === "Escape") closeNav(); });
+    if (hd) {
+      var onScroll = function () { hd.classList.toggle("stuck", window.scrollY > 8); };
+      onScroll();
+      window.addEventListener("scroll", onScroll, { passive: true });
+    }
+
+    /* IntersectionObserver reveals (staggered) — the nice path */
+    if (anim && reveals.length && "IntersectionObserver" in window) {
       var io = new IntersectionObserver(function (ents) {
         ents.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); } });
       }, { threshold: 0.12, rootMargin: "0px 0px -6% 0px" });
       reveals.forEach(function (el) { io.observe(el); });
     }
-    setTimeout(revealAll, 2600);
-  } else { revealAll(); }
 
-  /* optional polish: hero image parallax (degrades gracefully) */
-  if (hasGSAP && anim) {
-    var gsap = window.gsap;
-    gsap.registerPlugin(window.ScrollTrigger);
-    var heroImg = document.getElementById("heroImg");
-    if (heroImg) gsap.fromTo(heroImg, { yPercent: -5, scale: 1.05 }, {
-      yPercent: 5, scale: 1, ease: "none",
-      scrollTrigger: { trigger: ".hero-shot", start: "top bottom", end: "bottom top", scrub: true }
-    });
+    /* optional polish: hero image parallax */
+    if (hasGSAP && anim) {
+      window.gsap.registerPlugin(window.ScrollTrigger);
+      var heroImg = document.getElementById("heroImg");
+      if (heroImg) window.gsap.fromTo(heroImg, { yPercent: -5, scale: 1.05 }, {
+        yPercent: 5, scale: 1, ease: "none",
+        scrollTrigger: { trigger: ".hero-shot", start: "top bottom", end: "bottom top", scrub: true }
+      });
+    }
+  } catch (err) {
+    unlock();
   }
 
-  /* réalisations : make the horizontal strip feel natural with a mouse */
   /* lightbox */
   var items = Array.prototype.slice.call(document.querySelectorAll("#gtrack .gitem"));
   var lb = document.getElementById("lb");
